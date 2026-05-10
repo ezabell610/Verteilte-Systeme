@@ -26,26 +26,29 @@ def get_password_hash(plain_password: str) -> str:
     """Erzeugt einen Argon2-Hash inkl. automatisch eingebettetem Salt."""
     # TODO: Implementiert diese Funktion
     # Hinweis: password_hash.hash(...)
-    raise NotImplementedError
+    return password_hash.hash(plain_password) #hashed das Passwort
+    #raise NotImplementedError
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Vergleicht ein Klartext-Passwort mit einem gespeicherten Hash."""
     # TODO: Implementiert diese Funktion
     # Hinweis: password_hash.verify(...)
-    raise NotImplementedError
+    return password_hash.verify(plain_password, hashed_password) #vergleicht das plaine Passwort mit dem gehashten
+    #raise NotImplementedError
 
 
 def create_access_token(username: str) -> str:
     """Erzeugt einen signierten JWT mit Ablaufzeit."""
     # TODO: Implementiert diese Funktion
     # Hinweis: jwt.encode({"sub": ..., "exp": ...}, SECRET_KEY, algorithm=ALGORITHM)
-    raise NotImplementedError
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES) #holt aktuelle uhrzeit + die Ablaufzeit
+    token = jwt.encode({"sub": username,"exp": expire}, SECRET_KEY, algorithm=ALGORITHM) #ehm ka muss ich mir nochmal ordentlich anschauen und auseinander nehmen
+    return token
+    #raise NotImplementedError
 
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-) -> str:
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)],) -> str:
     """
     Dependency: Validiert den Bearer-Token und gibt den Benutzernamen zurück.
     Wirft HTTP 401, wenn der Token ungültig oder abgelaufen ist.
@@ -53,9 +56,12 @@ async def get_current_user(
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Ungültige Anmeldedaten",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+        headers={"WWW-Authenticate": "Bearer"},)
     # TODO: Implementiert diese Funktion
     # Hinweis: jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     #          payload.get("sub") liefert den Benutzernamen
-    raise credentials_exception
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username = payload.get("sub") #username wird hier abgefragt aus dem token
+    if username is None:
+        raise credentials_exception #falls Username nicht existiert wird fehlermeldung von oben ausgeführt
+    return username #falls ohne Fehler durchläuft, läufts
