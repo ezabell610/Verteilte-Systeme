@@ -1,19 +1,23 @@
 /** Basis-URL des FastAPI-Backends */
 const API_BASE = 'http://localhost:8000';
+const isBrowser = typeof window !== 'undefined';
 
 
 /** Hilfsfunktion: gibt den gespeicherten JWT zurück (oder null) */
 function getToken(): string | null {
+	if (!isBrowser) return null;
 	return localStorage.getItem('token');
 }
 
 /** Hilfsfunktion: speichert den JWT im localStorage */
 function saveToken(token: string): void {
+	if (!isBrowser) return;
 	localStorage.setItem('token', token);
 }
 
 /** Hilfsfunktion: löscht den JWT (Logout) */
 export function logout(): void {
+	if (!isBrowser) return;
 	localStorage.removeItem('token');
 }
 
