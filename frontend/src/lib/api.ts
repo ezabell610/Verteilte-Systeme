@@ -1,6 +1,7 @@
 /** Basis-URL des FastAPI-Backends */
 const API_BASE = 'http://localhost:8000';
 
+
 /** Hilfsfunktion: gibt den gespeicherten JWT zurück (oder null) */
 function getToken(): string | null {
 	return localStorage.getItem('token');
@@ -82,6 +83,15 @@ export async function fetchPublic<T>(path: string): Promise<T> {
 }
 
 // TODO: Ergänzt hier eigene API-Funktionen, z. B.:
+export async function register(username: string, email: string, password: string): Promise<void> {
+	const res = await fetch(`${API_BASE}/auth/register`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ username, email, password })
+	});
+
+	if (!res.ok) throw new Error('Registrierung fehlgeschlagen');
+}
 // export async function getItems() {
 //   return fetchPublic<Item[]>('/items');
 // }
