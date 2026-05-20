@@ -61,7 +61,7 @@
 
         <label>Kategorie</label>
         <select bind:value={category}>
-            {each kategorien as kat}
+            {#each kategorien as kat}
                 <option value={kat}>{kat}</option>
             {/each}
         </select>
