@@ -13,7 +13,7 @@
     <div class="links">
         <a href="/">Rezepte</a>
         {#if isLoggedIn()}
-            <a href="/recipes/new">Rezept erstellen</a>
+            <a href="/recipes/neu">Rezept erstellen</a>
             <button onclick={handleLogout}>Logout</button>
         {:else}
             <a href="/login">Login</a>
