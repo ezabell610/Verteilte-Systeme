@@ -39,9 +39,24 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     """Neuen Benutzer anlegen. Passwort wird als Argon2-Hash gespeichert."""
     # TODO: Implementiert diese Funktion
     # 1. Prüft, ob username oder email bereits existieren (→ 400)
+    existing_user = db.query(User).filter((User.username == data.username) | (User.email == data.email)).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Benutzername oder Email existiert bereits")
     # 2. Passwort hashen mit get_password_hash()
+    hashed_password = get_password_hash(data.password)
     # 3. User-Objekt anlegen, in DB speichern, zurückgeben
-    raise HTTPException(status_code=501, detail="Noch nicht implementiert")
+    user = User(
+        username=data.username,
+        email=data.email,
+        password_hash=hashed_password)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
 
 
 @app.post("/token", response_model=Token)
@@ -55,25 +70,28 @@ def login(
     """
     # TODO: Implementiert diese Funktion
     # 1. Benutzer anhand von form_data.username in der DB suchen
+    user = db.query(User).filter(User.username == form_data.username).first()
     # 2. Passwort mit verify_password() prüfen (Timing-Schutz: DUMMY_HASH nutzen)
+    hashed = user.password_hash if user else DUMMY_HASH
+    valid = verify_password(form_data.password,hashed)
     # 3. Bei Fehler: 401 zurückgeben (generische Meldung!)
+    if not user or not valid:
+        raise HTTPException(status_code=401,detail="Ungültige Anmeldedaten",headers={"WWW-Authenticate": "Bearer"},)
     # 4. JWT mit create_access_token() erzeugen und zurückgeben
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Noch nicht implementiert",
-    )
+    access_token = create_access_token(username=user.username)
+    return {"access_token": access_token,"token_type": "bearer"}
 
 
 @app.get("/my-profile", response_model=UserResponse)
-def get_profile(
-    current_username: Annotated[str, Depends(get_current_user)],
-    db: Session = Depends(get_db),
-):
+def get_profile(current_username: Annotated[str, Depends(get_current_user)],db: Session = Depends(get_db),):
     """Gibt das Profil des eingeloggten Benutzers zurück (geschützter Endpoint)."""
     # TODO: Implementiert diese Funktion
     # Hinweis: current_username kommt bereits validiert aus dem JWT (via Depends)
-    raise HTTPException(status_code=501, detail="Noch nicht implementiert")
-
+    user = db.query(User).filter(User.username == current_username).first()
+    if user is None:
+        raise HTTPException(status_code=404,detail="Benutzer nicht gefunden")
+    return user
+    
 
 # ---------------------------------------------------------------------------
 # TODO: Eure eigenen Endpoints hier einfügen

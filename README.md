@@ -1,63 +1,83 @@
-# Projekt-Template – SvelteKit + FastAPI + MySQL
+# Kochbuch – Rezeptverwaltung mit Tag-basierter Suche
 
-Startpunkt für euer Semester-4-Projekt. Enthält eine lauffähige Boilerplate mit:
+Eine Webanwendung, mit der Nutzer eigene Rezepte erstellen, verwalten, teilen und bewerten können. Rezepte können mit Tags kategorisiert und durchsucht werden. Öffentliche Rezepte sind auch ohne Login einsehbar.
 
-- **Backend**: FastAPI + SQLAlchemy + MySQL + JWT-Authentifizierung (Argon2)
-- **Frontend**: SvelteKit mit API-Hilfsfunktionen
-- **Infrastruktur**: Docker Compose für alle Services
+Projekt im Rahmen der Vorlesung **Verteilte Systeme** (4. Semester, DHBW).
 
-## Quickstart
+## Features
+
+- Registrierung und Login mit JWT-Authentifizierung
+- Rezepte erstellen, bearbeiten und löschen
+- Zutaten und Zubereitungsschritte pro Rezept
+- Tag-basierte Kategorisierung (z.B. Frühstück, Italienisch, Vegan)
+- Volltextsuche und Filter nach Tags
+- Sternebewertung (1–5)
+- Öffentliche und private Rezepte
+- Auto-generierte API-Dokumentation (Swagger UI)
+
+## Tech-Stack
+
+| Schicht | Technologie |
+|---------|-------------|
+| Frontend | SvelteKit (TypeScript) |
+| Backend | FastAPI (Python 3.11), SQLAlchemy |
+| Authentifizierung | JWT mit Argon2 Password Hashing |
+| Datenbank | MySQL 8 |
+| Deployment | Docker Compose |
+
+## Architektur
+
+Eine ausführliche Beschreibung der Architektur und des Datenflusses findet sich in [`docs/architektur.md`](docs/architektur.md).
+
+Kurz: Drei Container im Docker-Netzwerk:
+
+```mermaid
+flowchart LR
+    Browser["Browser"] -->|HTTP| FE["SvelteKit Frontend<br/>Port 5173"]
+    FE -->|REST API + JWT| BE["FastAPI Backend<br/>Port 8000"]
+    BE -->|SQLAlchemy| DB[("MySQL<br/>Port 3306")]
+```
+
+## Datenbankschema
+
+Eine ausführliche Beschreibung der Datenbankstruktur findet sich in [`docs/db-schema.md`](docs/db-schema.md).
+
+## Setup
+
+**Voraussetzungen:** Docker Desktop installiert und gestartet.
 
 ```bash
-# 1. .env aus Vorlage erstellen und Werte anpassen
+# 1. Repository klonen
+git clone https://github.com/ezabell610/Verteilte-Systeme.git
+cd Verteilte-Systeme
+
+# 2. .env aus Vorlage erstellen
 cp .env.example .env
 
-# 2. SECRET_KEY generieren (für JWT) – z.B. mit:
+# 3. SECRET_KEY für JWT generieren und in .env eintragen
 openssl rand -hex 32
-# Den Output in die `.env`-Datei als `SECRET_KEY` eintragen.
 
-# 3. Alle Services bauen und starten
-docker compose up -d --build
-
-# 4. Fertig!
-#    Frontend:  http://localhost:5173
-#    Backend:   http://localhost:8000
-#    API-Docs:  http://localhost:8000/docs
+# 4. Alle Services bauen und starten
+docker compose up --build
 ```
+
+**Aufrufen:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API-Dokumentation (Swagger UI): http://localhost:8000/docs
+
+## API-Endpoints (Übersicht)
+
+| Methode | Pfad | Zweck | Auth |
+|---------|------|-------|------|
+| POST | `/auth/register` | Account anlegen | – |
+| POST | `/auth/login` | Login, gibt JWT zurück | – |
+| GET | `/recipes` | Alle (öffentlichen) Rezepte | – |
+| GET | `/recipes/{id}` | Einzelnes Rezept | – |
+| POST | `/recipes` | Rezept erstellen | JWT |
+| PUT | `/recipes/{id}` | Rezept bearbeiten | JWT |
+| DELETE | `/recipes/{id}` | Rezept löschen | JWT |
+| POST | `/recipes/{id}/ratings` | Rezept bewerten | JWT |
+| GET | `/my-profile` | Eigenes Profil | JWT |
 
 ## Projektstruktur
-
-```
-projekt-template/
-├── backend/
-│   ├── main.py          # FastAPI-App (Endpoints)
-│   ├── auth.py          # JWT + Argon2 Passwort-Hashing
-│   ├── database.py      # SQLAlchemy Engine + Session
-│   ├── models.py        # ORM-Modelle (User + eure Tabellen)
-│   ├── schemas.py       # Pydantic-Schemas (Request/Response)
-│   ├── requirements.txt # Python-Abhängigkeiten
-│   └── Dockerfile       # Bauanleitung für Backend-Container
-├── frontend/
-│   ├── src/
-│   │   ├── lib/api.ts          # API-Hilfsfunktionen (login, fetch...)
-│   │   └── routes/+page.svelte # Startseite
-│   ├── package.json            # NodeJS-Abhängigkeiten
-│   └── Dockerfile              # Bauanleitung für Frontend-Container
-├── docker-compose.yml          # Orchestrierung aller Container
-├── .env.example                # Vorlage für Umgebungsvariablen
-└── .gitignore                  # Git-Ignore-Datei
-```
-
-## Wo anfangen?
-
-1. **Backend erweitern**: Eigene Modelle in `backend/models.py` anlegen, Pydantic-Schemas für API in `backend/schemas.py` anpassen, Endpoints in `backend/main.py` anlegen. Testen mit Swagger UI (`http://localhost:8000/docs`)
-2. **Frontend erweitern**: API-Aufrufe (Kommunikation Svelte <-> Backend) in `frontend/src/lib/api.ts`, UI in `frontend/src/routes/`
-3. **Datenbank**: Tabellen werden beim Start automatisch angelegt (`Base.metadata.create_all`)
-
-## Authentifizierung testen
-
-Die Swagger UI unter `http://localhost:8000/docs` hat einen eingebauten **Authorize**-Button:
-
-1. Benutzer anlegen: `POST /auth/register`
-2. Einloggen: Authorize-Button klicken → username + password eingeben
-3. Geschützte Endpoints wie `GET /my-profile` aufrufen
