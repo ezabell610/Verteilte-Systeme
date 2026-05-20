@@ -20,6 +20,13 @@ from schemas import Token, UserRegister, UserResponse
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Mein Projekt", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------------------------------------------------------
 # Health Check
@@ -50,7 +57,7 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     user = User(
         username=data.username,
         email=data.email,
-        password_hash=hashed_password)
+        hashed_password=hashed_password)
 
     db.add(user)
     db.commit()
@@ -72,7 +79,7 @@ def login(
     # 1. Benutzer anhand von form_data.username in der DB suchen
     user = db.query(User).filter(User.username == form_data.username).first()
     # 2. Passwort mit verify_password() prüfen (Timing-Schutz: DUMMY_HASH nutzen)
-    hashed = user.password_hash if user else DUMMY_HASH
+    hashed = user.hashed_password if user else DUMMY_HASH
     valid = verify_password(form_data.password,hashed)
     # 3. Bei Fehler: 401 zurückgeben (generische Meldung!)
     if not user or not valid:
@@ -109,5 +116,3 @@ def get_profile(current_username: Annotated[str, Depends(get_current_user)],db: 
 #     db.commit()
 #     db.refresh(item)
 #     return item
-@app.get("/recipes")
-def get_recipes(db:)
