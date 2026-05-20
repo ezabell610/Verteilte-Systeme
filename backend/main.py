@@ -109,3 +109,5 @@ def get_profile(current_username: Annotated[str, Depends(get_current_user)],db: 
 #     db.commit()
 #     db.refresh(item)
 #     return item
+@app.get("/recipes")
+def get_recipes(db:)
