@@ -8,7 +8,7 @@
 </script>
 
 <nav>
-    <a href="/">🥗Kochbuch</a>
+    <a href="/">🍳 Kochbuch</a>
 
     <div class="links">
         <a href="/">Rezepte</a>
@@ -30,7 +30,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem 2rem;
-        background: #04545b;
+        background: #068691;
         color: white;
         font-family: sans-serif;
     }
@@ -49,7 +49,7 @@
     }
     button {
         background: white;
-        color: #04545b;
+        color: #068691;
         border: none;
         padding: 0.4rem 0.8rem;
         border-radius: 6px;
