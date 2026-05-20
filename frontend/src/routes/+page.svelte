@@ -69,7 +69,7 @@
 	<div class="header">
 		<h1>Rezepte</h1>
 		{#if isLoggedIn()}
-			<a href="/recipes/new" class="erstellen-btn">+ Rezept erstellen</a>
+			<a href="/recipes/neu" class="erstellen-btn">+ Rezept erstellen</a>
 			{/if}
 	</div>
 	<!--Suchleiste-->
