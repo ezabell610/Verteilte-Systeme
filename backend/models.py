@@ -5,12 +5,13 @@ from database import Base
 
 
 class User(Base):
+    """Benutzertabelle – hier könnt ihr weitere Felder ergänzen."""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True, nullable=False)
-    email = Column(String(200), unique=True, nullable=False)
-    hashed_password = Column(String(200), nullable=False)
+    username = Column(String(100), unique=True, nullable=False) #Username max 100 Zeichen
+    email = Column(String(200), unique=True, nullable=False) #Email max 200 zeichen
+    hashed_password = Column(String(200), nullable=False) #Passwort max 200 Zeichen
 
     recipes = relationship("Recipe", back_populates="user")
     ratings = relationship("Rating", back_populates="user")
@@ -21,8 +22,8 @@ class Category(Base):
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False)
-    description = Column(String(500))
+    name = Column(String(100), unique=True, nullable=False) #Name maximal 100 Zeichen
+    description = Column(String(500)) # Beschreibung maximal 500 Zeichen
 
     recipes = relationship("Recipe", back_populates="category")
 
