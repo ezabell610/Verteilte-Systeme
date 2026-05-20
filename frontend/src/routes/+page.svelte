@@ -1,4 +1,5 @@
 <script lang="ts">
+	import StarRating from "$lib/StarRating.svelte";
     import { isLoggedIn } from "$lib/api";
 
 	//Probe-Daten bis Isabells Backend fertig ist --> Das dann ändern! zwecks todos
@@ -97,7 +98,7 @@
 				<h2>{recipe.title}</h2>
 				<p class="kategorie">{recipe.category}</p>
 				<p>{recipe.description}</p>
-				<p class="sterne">{'★'.repeat(recipe.stars)}</p>
+				<StarRating rating={recipe.stars} />
 			</a>
 		{:else}
 			<p>Keine Rezepte gefunden.</p>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import StarRating from "$lib/StarRating.svelte";
     import { isLoggedIn } from "$lib/api";
     import { page } from '$app/stores';
 
@@ -103,7 +104,10 @@
         </div>
 
         <span class="kategorie">{recipe.category}</span>
-        <p class="sterne">{'★'.repeat(recipe.stars)}</p>
+        <StarRating 
+            rating={recipe.stars}
+            onRate={isLoggedIn() ? (stars) => { alert('Du hast ' + stars + ' Sterne vergeben!') } : null} 
+        /> 
         <p class="beschreibung">{recipe.description}</p>
 
         <h2>Zutaten</h2>
