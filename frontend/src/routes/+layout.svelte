@@ -14,6 +14,7 @@
         <a href="/">Rezepte</a>
         {#if isLoggedIn()}
             <a href="/recipes/neu">Rezept erstellen</a>
+            <a href="/shopping-list">Einkaufsliste</a>
             <button onclick={handleLogout}>Logout</button>
         {:else}
             <a href="/login">Login</a>

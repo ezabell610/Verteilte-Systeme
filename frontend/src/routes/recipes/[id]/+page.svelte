@@ -113,7 +113,14 @@
         <h2>Zutaten</h2>
         <ul class="zutaten">
             {#each recipe.ingredients as zutat}
-                <li>{zutat.amount} {zutat.unit} {zutat.name}</li>
+                <li>
+                    {zutat.amount} {zutat.unit} {zutat.name}
+                    {#if isLoggedIn()}
+                        <button class="add-btn" onclick={() => alert('Zur Einkaufsliste hinzugefügt: ' + zutat.name)}>
+                            + Einkaufsliste
+                        </button>
+                    {/if}    
+                </li>
             {/each}
         </ul>
 
@@ -172,6 +179,21 @@
     }
     .zutaten {
         line-height: 2;
+    }
+    .zutaten li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .add-btn {
+        background: #04545b;
+        color: white;
+        border: none;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-family: sans-serif;
     }
     .schritte {
         line-height: 1.8;
