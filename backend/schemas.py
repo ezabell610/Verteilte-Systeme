@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List
 
 # --- Auth-Schemas ---
 
@@ -13,7 +13,6 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-
     model_config = {"from_attributes": True}
 
 
@@ -32,3 +31,34 @@ class Token(BaseModel):
 #     name: str
 #     price: int
 #     model_config = {"from_attributes": True}
+class Ingredient(BaseModel): #Zutat
+    name: str
+
+
+class Step(BaseModel): #Schritt
+    text: str
+
+
+# Rezept erstellen
+class RecipeCreate(BaseModel): #Rezept erstllen mit den Schritten und Zutaten
+    title: str
+    description: str
+    ingredients: List[Ingredient]
+    steps: List[Step]
+
+class RecipeUpdate(BaseModel): #Rezept ändern
+    title: str | None = None
+    description: str | None = None
+    ingredients: List[Ingredient] | None = None
+    steps: List[Step] | None = None
+
+class RecipeResponse(BaseModel): #
+    id: int
+    title: str
+    description: str
+    ingredients: List[Ingredient]
+    steps: List[Step]
+
+    class Config:
+        from_attributes = True
+    
