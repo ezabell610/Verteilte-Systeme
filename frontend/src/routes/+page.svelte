@@ -151,16 +151,17 @@
 	}
 	.karte {
 		background: white;
-		border: 1px solid #ddd;
-		border-radius: 10px;
+		border: 1px solid #e0e0e0;
+		border-radius: 12px;
 		padding: 1.2rem;
 		text-decoration: none;
 		color: black;
-		box-shadow: 0 2px 6px rgba(0,0, 0, 0.08);
-		transition: box-shadow 0.2s;
+		box-shadow: 0 2px 8px rgba(0,0, 0, 0.06);
+		transition: transform 0.2s, box-shadow 0.2s;
 	}
 	.karte:hover {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transform: translateY(-3px);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 	}
 	.karte h2 {
 		margin: 0 0 0.3rem 0;
