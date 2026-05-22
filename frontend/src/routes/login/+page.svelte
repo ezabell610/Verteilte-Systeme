@@ -1,16 +1,21 @@
 <script lang="ts">
     import { login } from '$lib/api';
     
-    let username = '';
-    let password = '';
-    let fehler = '';
+    let username = $state('');
+    let password = $state('');
+    let fehler = $state('');
+    let loading = $state(false);
 
     async function handleLogin() {
+        loading = true;
+        fehler = '';
         try {
             await login(username, password);
             window.location.href = '/';
         } catch (e) {
             fehler = 'Benutzername oder Passwort falsch';
+        } finally {
+            loading = false;
         }
     }
 </script>
@@ -24,7 +29,9 @@
 
     <input type="text" placeholder="Benutzername" bind:value={username} />
     <input type="password" placeholder="Passwort" bind:value={password} />
-    <button onclick={handleLogin}>Einloggen</button>
+    <button onclick={handleLogin} disabled={loading}>
+        {loading ? 'Wird geladen...' : 'Einloggen'}
+    </button>
 
     <p>Sie haben noch kein Konto? <a href="/register">Registrieren</a></p>
 </main>

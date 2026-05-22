@@ -24,8 +24,14 @@
     }
 
     async function handleSubmit() {
+        console.log('Button geklickt!');
+        console.log('Title:', title);
+        console.log ('Description:', description);
+        console.log('Steps:', steps);
+
         if (!title || !description || !steps) {
             fehler = 'Bitte alle Felder ausfüllen!';
+            console.log('Felder fehlen');
             return;
         }
         // TODO: Später durch echten API-Call ersetzen
@@ -85,7 +91,7 @@
         {/each}
         <button class="add-btn" onclick={addIngredient}>+ Zutat hinzufügen</button>
 
-        <button class="submit-btn" onclick={handleSubmit}>Rezept erstellen</button>
+        <button class="submit-btn" onclick={() => handleSubmit()}>Rezept erstellen</button>
     </main>
 {/if}
 
