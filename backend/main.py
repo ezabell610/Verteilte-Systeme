@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from auth import (DUMMY_HASH,create_access_token,get_current_user,get_password_hash,verify_password,)
 from database import Base, engine, get_db
 from models import User, Recipe
-from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate
+from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate, RatingCreate
 
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
@@ -136,3 +136,14 @@ def delete_recipe(id: int, db: Session = Depends(get_db)):
     db.delete(recipe)
     db.commit()
     return {"message": "Rezept gelöscht"}
+
+@app.post("/recipes/{id}/ratings")
+def add_rating(id: int,data: RatingCreate,db: Session = Depends(get_db)):
+    recipe = db.query(Recipe).filter(Recipe.id == id).first()
+    if recipe is None:
+        raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
+
+    recipe.rating = data.rating
+    db.commit()
+    db.refresh(recipe)
+    return {"message": "Bewertung gespeichert","recipe_id": id,"rating": data.rating}
