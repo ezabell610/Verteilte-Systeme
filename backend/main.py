@@ -5,28 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from auth import (
-    DUMMY_HASH,
-    create_access_token,
-    get_current_user,
-    get_password_hash,
-    verify_password,
-)
+from auth import (DUMMY_HASH,create_access_token,get_current_user,get_password_hash,verify_password,)
 from database import Base, engine, get_db
-from models import User
-from schemas import Token, UserRegister, UserResponse
+from models import User, Recipe
+from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate
 
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Mein Projekt", version="0.1.0")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # ---------------------------------------------------------------------------
 # Health Check
@@ -48,29 +35,19 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     # 1. Prüft, ob username oder email bereits existieren (→ 400)
     existing_user = db.query(User).filter((User.username == data.username) | (User.email == data.email)).first()
     if existing_user:
-        raise HTTPException(
-            status_code=400,
-            detail="Benutzername oder Email existiert bereits")
+        raise HTTPException(status_code=400,detail="Benutzername oder Email existiert bereits")
     # 2. Passwort hashen mit get_password_hash()
     hashed_password = get_password_hash(data.password)
     # 3. User-Objekt anlegen, in DB speichern, zurückgeben
-    user = User(
-        username=data.username,
-        email=data.email,
-        hashed_password=hashed_password)
-
+    user = User(username=data.username,email=data.email,password_hash=hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)
-
     return user
 
 
 @app.post("/token", response_model=Token)
-def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db),
-):
+def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: Session = Depends(get_db),):
     """
     OAuth2 Password Flow: Empfängt username + password als Formular-Daten.
     Gibt einen JWT zurück.
@@ -79,7 +56,7 @@ def login(
     # 1. Benutzer anhand von form_data.username in der DB suchen
     user = db.query(User).filter(User.username == form_data.username).first()
     # 2. Passwort mit verify_password() prüfen (Timing-Schutz: DUMMY_HASH nutzen)
-    hashed = user.hashed_password if user else DUMMY_HASH
+    hashed = user.password_hash if user else DUMMY_HASH
     valid = verify_password(form_data.password,hashed)
     # 3. Bei Fehler: 401 zurückgeben (generische Meldung!)
     if not user or not valid:
@@ -116,3 +93,46 @@ def get_profile(current_username: Annotated[str, Depends(get_current_user)],db: 
 #     db.commit()
 #     db.refresh(item)
 #     return item
+@app.get("/recipes") #alle Rezepte laden
+def get_recipes(db: Session = Depends(get_db)):
+    return db.query(Recipe).all()
+
+
+@app.get("/recipes/{id}") #einzelne Rezepte laden
+def get_recipe(id: int, db: Session = Depends(get_db)):
+    recipe = db.query(Recipe).filter(Recipe.id == id).first()
+    if recipe is None:
+        raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
+    return recipe
+
+
+@app.post("/recipes",response_model=RecipeResponse,status_code=201) #Rezept erstellen
+def create_recipe(data: RecipeCreate,db: Session = Depends(get_db)):
+    recipe = Recipe(**data.model_dump())
+    db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+    return recipe
+
+
+@app.put("/recipes/{id}",response_model=RecipeResponse) #Rezept verändern
+def update_recipe( id: int,data: RecipeUpdate,db: Session = Depends(get_db)):
+    recipe = db.query(Recipe).filter(Recipe.id == id).first()
+    if recipe is None:
+        raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(recipe, key, value)
+    db.commit()
+    db.refresh(recipe)
+    return recipe
+
+
+@app.delete("/recipes/{id}") #Rezept löschen
+def delete_recipe(id: int, db: Session = Depends(get_db)):
+    recipe = db.query(Recipe).filter(Recipe.id == id).first()
+    if recipe is None:
+        raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
+    db.delete(recipe)
+    db.commit()
+    return {"message": "Rezept gelöscht"}
