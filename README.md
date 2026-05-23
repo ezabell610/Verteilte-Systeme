@@ -1,6 +1,6 @@
-# Kochbuch – Rezeptverwaltung mit Tag-basierter Suche
+# Kochbuch – Rezeptverwaltung mit Kategorien und Einkaufsliste
 
-Eine Webanwendung, mit der Nutzer eigene Rezepte erstellen, verwalten, teilen und bewerten können. Rezepte können mit Tags kategorisiert und durchsucht werden. Öffentliche Rezepte sind auch ohne Login einsehbar.
+Eine Webanwendung, mit der Nutzer eigene Rezepte erstellen, verwalten, teilen und bewerten können. Rezepte können in Kategorien organisiert und mit Sternebewertung versehen werden. Zutaten lassen sich auf eine persönliche Einkaufsliste setzen. Öffentliche Rezepte sind auch ohne Login einsehbar.
 
 Projekt im Rahmen der Vorlesung **Verteilte Systeme** (4. Semester, DHBW).
 
@@ -9,8 +9,9 @@ Projekt im Rahmen der Vorlesung **Verteilte Systeme** (4. Semester, DHBW).
 - Registrierung und Login mit JWT-Authentifizierung
 - Rezepte erstellen, bearbeiten und löschen
 - Zutaten und Zubereitungsschritte pro Rezept
-- Tag-basierte Kategorisierung (z.B. Frühstück, Italienisch, Vegan)
-- Volltextsuche und Filter nach Tags
+- Kategorien (z.B. Frühstück, Mittagessen, Dessert)
+- Persönliche Einkaufsliste aus Zutaten
+- Filter nach Kategorien
 - Sternebewertung (1–5)
 - Öffentliche und private Rezepte
 - Auto-generierte API-Dokumentation (Swagger UI)
