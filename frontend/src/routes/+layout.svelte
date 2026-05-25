@@ -1,4 +1,5 @@
 <script lang="ts">
+    let { children } = $props();
     import { isLoggedIn, logout } from '$lib/api';
 
     let menuOpen = $state(false);
@@ -30,7 +31,7 @@
     </div>
 </nav>
 
-<slot />
+{@render children()}
 
 <style>
     nav {
