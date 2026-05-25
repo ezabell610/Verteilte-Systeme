@@ -99,7 +99,7 @@
         <div class="header">
             <h1>{recipe.title}</h1>
             {#if isLoggedIn()}
-                <a href="/recipes/{recipes.id}/edit" class="edit-btn">Bearbeiten</a>
+                <a href="/recipes/{recipe.id}/edit" class="edit-btn">Bearbeiten</a>
             {/if}
         </div>
 
