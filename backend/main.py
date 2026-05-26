@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from auth import (DUMMY_HASH,create_access_token,get_current_user,get_password_hash,verify_password,)
 from database import Base, engine, get_db
-from models import User, Recipe
-from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate, RatingCreate
+from models import User, Recipe, Ingredient, Rating, ShoppingListItem
+from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate, RatingCreate, CategoryResponse, ShoppingListItemCreate, ShoppingListItemResponse
 
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
@@ -93,12 +93,17 @@ def get_profile(current_username: Annotated[str, Depends(get_current_user)],db: 
 #     db.commit()
 #     db.refresh(item)
 #     return item
-@app.get("/recipes") #alle Rezepte laden
-def get_recipes(db: Session = Depends(get_db)):
-    return db.query(Recipe).all()
+@app.get("/recipes", response_model=list[RecipeResponse]) #alle Rezepte laden
+def get_recipes(search: str = "", category_id: int = 0, db: Session = Depends(get_db)):
+    query = db.query(Recipe).filter(Recipe.is_public == True)
+    if search:
+        query = query.filter(Recipe.title.ilike(f"%{search}%"))
+    if category_id:
+        query = query.filter(Recipe.category_id == category_id)
+    return query.all()
 
 
-@app.get("/recipes/{id}") #einzelne Rezepte laden
+@app.get("/recipes/{id}", response_model=RecipeResponse) #einzelne Rezepte laden
 def get_recipe(id: int, db: Session = Depends(get_db)):
     recipe = db.query(Recipe).filter(Recipe.id == id).first()
     if recipe is None:
@@ -111,30 +116,52 @@ def get_recipe(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/recipes",response_model=RecipeResponse,status_code=201) #Rezept erstellen
-def create_recipe(data: RecipeCreate,db: Session = Depends(get_db)):
-    recipe = Recipe(**data.model_dump())
+def create_recipe(data: RecipeCreate, current_user: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_user).first()
+    recipe = Recipe(title = data.title, description = data.description, steps = data.steps, category_id = data.category_id, is_public = data.is_puplic, user_id = data.user_id)
     db.add(recipe)
+    db.flush()
+    for ing in data.ingredients:
+        db.add(Ingredient(recipe_id = recipe.id, name = ing.name, amount = ing.amount, unit = int.unit))
     db.commit()
     db.refresh(recipe)
     return recipe
 
+@app.get("/my-recipes", response_model=list[RecipeResponse])
+def get_my_recipes(current_username: Annotated[str, Depends(get_current_user)],db:Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    return db.query(Recipe).filter(Recipe.user_id == user.id).first
+
 
 @app.put("/recipes/{id}",response_model=RecipeResponse) #Rezept verändern
-def update_recipe( id: int,data: RecipeUpdate,db: Session = Depends(get_db)):
-    recipe = db.query(Recipe).filter(Recipe.id == id).first()
-    if recipe is None:
-        raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(recipe, key, value)
+def update_recipe( id: int,data: RecipeUpdate, current_username: Annotated[str, Depends(get_current_user)],db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    recipe = db.query(Recipe).filter(Recipe.id == id,Recipe.user_id == user.id).first()
+    if not recipe:
+        raise HTTPException(status_code = 404, detail = "Rezept nicht gefunden")
+    if data.title is not None:
+        recipe.title = data.title
+    if data.description is not None:
+        recipe.description = data.description
+    if data.steps is not None:
+        recipe.steps = data.steps
+    if data.category_id is not None:
+        recipe.category_id = data.category_id
+    if data.is_public is not None:
+        recipe.is_public = data.is_public
+    if data.ingredients is not None:
+        db.query(Ingredient).filter(Ingredient.recipe_id == id).delete()
+        for ing in data.ingredients:
+            db.add(Ingredient(recipe_id = id, name = ing.name, amount= ing.amount, unit = ing.unit))
     db.commit()
     db.refresh(recipe)
     return recipe
 
 
 @app.delete("/recipes/{id}") #Rezept löschen
-def delete_recipe(id: int, db: Session = Depends(get_db)):
-    recipe = db.query(Recipe).filter(Recipe.id == id).first()
+def delete_recipe(id: int, current_username: Annotated[str, Depends(get_current_user)],db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    recipe = db.query(Recipe).filter(Recipe.id == id, Recipe.user_id == user.id).first()
     if recipe is None:
         raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
     db.delete(recipe)
@@ -142,12 +169,50 @@ def delete_recipe(id: int, db: Session = Depends(get_db)):
     return {"message": "Rezept gelöscht"}
 
 @app.post("/recipes/{id}/ratings")
-def add_rating(id: int,data: RatingCreate,db: Session = Depends(get_db)):
+def add_rating(id: int,data: RatingCreate, current_username: Annotated[str, Depends(get_current_user)],db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
     recipe = db.query(Recipe).filter(Recipe.id == id).first()
-    if recipe is None:
+    if not recipe:
         raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
-
-    recipe.rating = data.rating
+    existing = db.query(Rating).filter(Rating.user_id == user.id, Rating.recipe_id == id).first()
+    if existing:
+        existing.stars = data.stars
+    else:
+        db.add(Rating(user_id = user.id, recipe_id = id, stars = data.stars))
     db.commit()
     db.refresh(recipe)
-    return {"message": "Bewertung gespeichert","recipe_id": id,"rating": data.rating}
+    return {"message": "Bewertung gespeichert"}
+
+@app.get("/shopping-list", response_model=list[ShoppingListItemResponse])
+def get_shopping_list(current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    return db.query(ShoppingListItem).filter(ShoppingListItem.user_id == user.id).all()
+
+@app.post("/shopping-list", response_model=ShoppingListItemResponse, status_code=201)
+def add_to_shopping_list(data: ShoppingListItemCreate, current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    item = ShoppingListItem(user_id=user.id, ingredient_id=data.ingredient_id, checked=False)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@app.put("/shopping-list/{id}")
+def toggle_shopping_item(id: int, current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    item = db.query(ShoppingListItem).filter(ShoppingListItem.id == id, ShoppingListItem.user_id == user.id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
+    item.checked = not item.checked
+    db.commit()
+    return {"message": "Aktualisiert"}
+
+@app.delete("/shopping-list/{id}")
+def remove_from_shopping_list(id: int, current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    item = db.query(ShoppingListItem).filter(ShoppingListItem.id == id, ShoppingListItem.user_id == user.id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
+    db.delete(item)
+    db.commit()
+    return {"message": "Entfernt"}
