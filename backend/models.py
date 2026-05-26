@@ -37,7 +37,7 @@ class Recipe(Base):
     title = Column(String(200), nullable=False)
     description = Column(Text)
     steps = Column(Text)
-    is_public = Column(Boolean, default=True)
+    is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="recipes")

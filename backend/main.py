@@ -103,6 +103,10 @@ def get_recipe(id: int, db: Session = Depends(get_db)):
     recipe = db.query(Recipe).filter(Recipe.id == id).first()
     if recipe is None:
         raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
+    if recipe.is_public:
+        return recipe
+    if not recipe.is_public:
+        raise HTTPException(status_code=401,detail="Anmeldung erforderlich")
     return recipe
 
 
