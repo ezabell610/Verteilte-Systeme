@@ -1,4 +1,5 @@
 <script lang="ts">
+    import StarRating from "$lib/StarRating.svelte";
     import { isLoggedIn } from "$lib/api";
     import { page } from '$app/stores';
 
@@ -98,18 +99,28 @@
         <div class="header">
             <h1>{recipe.title}</h1>
             {#if isLoggedIn()}
-                <a href="/recipes/{recipes.id}/edit" class="edit-btn">Bearbeiten</a>
+                <a href="/recipes/{recipe.id}/edit" class="edit-btn">Bearbeiten</a>
             {/if}
         </div>
 
         <span class="kategorie">{recipe.category}</span>
-        <p class="sterne">{'★'.repeat(recipe.stars)}</p>
+        <StarRating 
+            rating={recipe.stars}
+            onRate={isLoggedIn() ? (stars) => { alert('Du hast ' + stars + ' Sterne vergeben!') } : null} 
+        /> 
         <p class="beschreibung">{recipe.description}</p>
 
         <h2>Zutaten</h2>
         <ul class="zutaten">
             {#each recipe.ingredients as zutat}
-                <li>{zutat.amount} {zutat.unit} {zutat.name}</li>
+                <li>
+                    {zutat.amount} {zutat.unit} {zutat.name}
+                    {#if isLoggedIn()}
+                        <button class="add-btn" onclick={() => alert('Zur Einkaufsliste hinzugefügt: ' + zutat.name)}>
+                            + Einkaufsliste
+                        </button>
+                    {/if}    
+                </li>
             {/each}
         </ul>
 
@@ -168,6 +179,21 @@
     }
     .zutaten {
         line-height: 2;
+    }
+    .zutaten li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .add-btn {
+        background: #04545b;
+        color: white;
+        border: none;
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-family: sans-serif;
     }
     .schritte {
         line-height: 1.8;

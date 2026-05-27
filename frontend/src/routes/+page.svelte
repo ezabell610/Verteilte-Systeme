@@ -1,5 +1,10 @@
 <script lang="ts">
+	import StarRating from "$lib/StarRating.svelte";
     import { isLoggedIn } from "$lib/api";
+
+	function scrollToContent () {
+		document.getElementById('content')?.scrollIntoView({ behavior: 'smooth' });
+	}
 
 	//Probe-Daten bis Isabells Backend fertig ist --> Das dann ändern! zwecks todos
 	let recipes = [
@@ -56,6 +61,7 @@
 		const matchesAuth = isLoggedIn() || r.is_public;
 		return matchesKategorie && matchesSearch && matchesAuth;
 	}));
+
 	// TODO: Importiert und nutzt die Funktionen aus $lib/api
 	// import { login, logout, isLoggedIn, fetchProtected } from '$lib/api';
 
@@ -64,49 +70,63 @@
 	// TODO: Implementiert eure Event-Handler-Funktionen
 </script>
 
-<main>
-	<div class="header">
-		<h1>Rezepte</h1>
-		{#if isLoggedIn()}
-			<a href="/recipes/new" class="erstellen-btn">+ Rezept erstellen</a>
-			{/if}
+<section class="splash">
+	<div class="splash-inner">
+		<div class="logo-kreis">🥘</div>
+		<h1 class="splash-titel">ESI's Kitchen</h1>
+		<p class="splash-sub">Entdecke, erstelle und teile deine Lieblingsrezepte</p>
+		<button class="scroll-btn" onclick={scrollToContent}>
+			V
+		</button>
 	</div>
-	<!--Suchleiste-->
-	<input
-		type="text"
-		placeholder="Rezept suchen..."
-		bind:value={searchText}
-	/>
+</section>
 
-	<!--Kategorien Filter-->
-	<div class="kategorien">
-		{#each kategorien as kat}
-			<button
-				class:aktiv={selectedKategorie === kat}
-				onclick={() => selectedKategorie = kat}
-			>
-				{kat}
-			</button>
-		{/each}
-	</div>
+<div id="content">
 
-	<!--Rezepte-->
-	<div class="karten">
-		{#each filteredRecipes as recipe}
-			<a href="/recipes/{recipe.id}" class="karte">
-				<h2>{recipe.title}</h2>
-				<p class="kategorie">{recipe.category}</p>
-				<p>{recipe.description}</p>
-				<p class="sterne">{'★'.repeat(recipe.stars)}</p>
-			</a>
-		{:else}
-			<p>Keine Rezepte gefunden.</p>
-		{/each}
-	</div>
-	<!-- TODO: Baut hier eure Oberfläche auf -->
-	<!-- Tipp: Nutzt {#if loggedIn} ... {:else} ... {/if} für konditionelle Anzeige -->
-	
-</main>
+	<main>
+		<div class="header">
+			<h1>Rezepte</h1>
+			{#if isLoggedIn()}
+				<a href="/recipes/neu" class="erstellen-btn">+ Rezept erstellen</a>
+				{/if}
+		</div>
+		<!--Suchleiste-->
+		<input
+			type="text"
+			placeholder="Rezept suchen..."
+			bind:value={searchText}
+		/>
+
+		<!--Kategorien Filter-->
+		<div class="kategorien">
+			{#each kategorien as kat}
+				<button
+					class:aktiv={selectedKategorie === kat}
+					onclick={() => selectedKategorie = kat}
+				>
+					{kat}
+				</button>
+			{/each}
+		</div>
+
+		<!--Rezepte-->
+		<div class="karten">
+			{#each filteredRecipes as recipe}
+				<a href="/recipes/{recipe.id}" class="karte">
+					<h2>{recipe.title}</h2>
+					<p class="kategorie">{recipe.category}</p>
+					<p>{recipe.description}</p>
+					<StarRating rating={recipe.stars} />
+				</a>
+			{:else}
+				<p>Keine Rezepte gefunden.</p>
+			{/each}
+		</div>
+		<!-- TODO: Baut hier eure Oberfläche auf -->
+		<!-- Tipp: Nutzt {#if loggedIn} ... {:else} ... {/if} für konditionelle Anzeige -->
+		
+	</main>
+</div>
 
 <style>
 	main {
@@ -150,16 +170,17 @@
 	}
 	.karte {
 		background: white;
-		border: 1px solid #ddd;
-		border-radius: 10px;
+		border: 1px solid #e0e0e0;
+		border-radius: 12px;
 		padding: 1.2rem;
 		text-decoration: none;
 		color: black;
-		box-shadow: 0 2px 6px rgba(0,0, 0, 0.08);
-		transition: box-shadow 0.2s;
+		box-shadow: 0 2px 8px rgba(0,0, 0, 0.06);
+		transition: transform 0.2s, box-shadow 0.2s;
 	}
 	.karte:hover {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transform: translateY(-3px);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 	}
 	.karte h2 {
 		margin: 0 0 0.3rem 0;
@@ -177,5 +198,71 @@
 	}
 	.sterne {
 		margin-top: 0.5rem;
+	}
+	.splash {
+		height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: linear-gradient(135deg, #04545b 0%, #068691 50%, #0aa8b5 100%);
+		text-align: center;
+	}
+	.splash-inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.5rem;
+		color: white;
+	}
+	.logo-kreis {
+		font-size: 5rem;
+		background: rgba(255,255,255, 0.15);
+		border-radius: 50%;
+		width: 120px;
+		height: 120px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(10px);
+		border: 2px solid rgba(255,255,255,0.3);
+		animation: float 3s ease-in-out infinite;
+	}
+	@keyframes float {
+		0%, 100% { transform: translateY(0px); }
+		50% { transform: translateY(-10px); }
+	}
+	.splash-titel {
+		font-size: 3.5rem;
+		font-weight: bold;
+		margin: 0;
+		text-shadow: 0 2px 10px rgba(0,0,0, 0.2);
+		letter-spacing: 2px;
+	}
+	.splash-sub {
+		font-size: 1.1rem;
+		opacity: 0.85;
+		margin: 0;
+		max-width: 400px;
+	}
+	.scroll-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255,255, 255,0.5);
+		color: white;
+		font-size: 1.8rem;
+		width: 55px;
+		height: 55px;
+		border-radius: 50%;
+		cursor: pointer;
+		margin-top: 1rem;
+		transition: background 0.3s, transform 0.3s;
+		animation: bounce 2s ease-in-out infinite;
+	}
+	.scroll-btn:hover {
+		background: rgba(255, 255, 255, 0.35);
+		transform: scale(1.1);
+	}
+	@keyframes bounce {
+		0%, 100% { transform: translateY(0); }
+		50% { transform: translateY(8px); }
 	}
 </style>

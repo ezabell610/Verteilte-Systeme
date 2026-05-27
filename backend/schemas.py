@@ -85,7 +85,7 @@ class CategoryResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
-    model_config = {"from_attributes" = True}
+    model_config = {"from_attributes" : True}
     
     
 class ShoppingListItemCreate(BaseModel):
@@ -97,4 +97,4 @@ class ShoppingListItemResponse(BaseModel):
     ingredient_id: int
     checked: bool
     ingredient: IngedientResponse
-    model_config = {"from_attributes" = True}
+    model_config = {"from_attributes" : True}

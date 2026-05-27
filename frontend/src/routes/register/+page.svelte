@@ -1,18 +1,24 @@
 <script lang="ts">
     import { register } from '$lib/api';
 
-    let username = '';
-    let email = '';
-    let password = '';
-    let fehler = '';
-    let erfolg = '';
+    let username = $state('');
+    let email = $state('');
+    let password = $state('');
+    let fehler = $state('');
+    let erfolg = $state('');
+    let loading = $state(false);
 
     async function handleRegister() {
+        loading = true;
+        fehler = '';
         try {
             await register(username, email, password);
             erfolg = 'Konto erstellt! Sie können sich jetzt einloggen.';
+            fehler = '';
         } catch (e) {
             fehler = 'Registrierung fehlgeschlagen.';
+        } finally {
+            loading = false;
         }
     }
 </script>
@@ -30,7 +36,9 @@
     <input type="text" placeholder="Benutzername" bind:value={username} />
     <input type="email" placeholder="E-Mail" bind:value={email} />
     <input type="password" placeholder="Passwort" bind:value={password} />
-    <button onclick={handleRegister}>Konto erstellen</button>
+    <button onclick={handleRegister} disabled={loading}>
+        {loading ? 'Wird geladen...' : 'Konto erstellen'}
+    </button>
 
     <p>Schon ein Konto? <a href="/login">Einloggen</a></p>
 </main>

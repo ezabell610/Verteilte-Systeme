@@ -1,5 +1,8 @@
 <script lang="ts">
+    let { children } = $props();
     import { isLoggedIn, logout } from '$lib/api';
+
+    let menuOpen = $state(false);
 
     function handleLogout() {
         logout();
@@ -8,21 +11,27 @@
 </script>
 
 <nav>
-    <a href="/">🥗Kochbuch</a>
+    <a href="/" class="logo">🍳 Kochbuch</a>
 
-    <div class="links">
-        <a href="/">Rezepte</a>
+    <button class="hamburger" onclick={() => menuOpen = !menuOpen}>
+        {menuOpen ? 'x' : '=='}
+    </button>
+
+    <div class="links" class:open={menuOpen}>
+        <a href="/" onclick={() => menuOpen = false}>Rezepte</a>
         {#if isLoggedIn()}
-            <a href="/recipes/new">Rezept erstellen</a>
-            <button onclick={handleLogout}>Logout</button>
+            <a href="/recipes/neu" onclick={() => menuOpen = false}>Rezept erstellen</a>
+            <a href="/my-recipes" onclick={() => menuOpen = false}>Meine Rezepte</a>
+            <a href="/shopping-list" onclick={() => menuOpen = false}>Einkaufsliste</a>
+            <button class="logout-btn" onclick={handleLogout}>Logout</button>
         {:else}
-            <a href="/login">Login</a>
-            <a href="/register">Registrieren</a>
+            <a href="/login" onclick={() => menuOpen = false}>Login</a>
+            <a href="/register" onclick={() => menuOpen = false}>Registrieren</a>
         {/if}
     </div>
 </nav>
 
-<slot />
+{@render children()}
 
 <style>
     nav {
@@ -32,12 +41,25 @@
         padding: 1rem 2rem;
         background: #04545b;
         color: white;
-        font-family: sans-serif;
+        font-family: 'Segoe UI', sans-serif;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
-    nav a {
+    .logo {
         color: white;
         text-decoration: none;
         font-weight: bold;
+        font-size: 1.2rem;
+    }
+    .hamburger {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
     }
     .links {
         display: flex;
@@ -45,9 +67,15 @@
         align-items: center;
     }
     .links a {
-        font-weight: normal;
+        color: white;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: opacity 0.2s;
     }
-    button {
+    .links a:hover {
+        opacity: 0.8;
+    }
+    .logout-btn {
         background: white;
         color: #04545b;
         border: none;
@@ -55,5 +83,27 @@
         border-radius: 6px;
         cursor: pointer;
         font-weight: bold;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    @media (max-width: 768px) {
+        .hamburger {
+            display: block;
+        }
+        .links {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #04545b;
+            padding: 1rem 2rem;
+            gap: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .links.open {
+            display: flex;
+        }
     }
 </style>
