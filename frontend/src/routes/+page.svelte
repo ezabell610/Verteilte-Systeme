@@ -2,66 +2,53 @@
 	import StarRating from "$lib/StarRating.svelte";
     import { isLoggedIn } from "$lib/api";
 
+	const API_BASE = 'http://localhost:8000';
+
+	let recipes = $state([]);
+	let kategorien = $state([{ id: 0, name: 'Alle' }]);
+	let selectedKategorie = $state(0);
+	let searchText = $state('');
+	let loading = $state(true);
+
+	async function loadKategorien() {
+		try {
+			const res = await fetch (`${API_BASE}/categories`);
+			const data = await res.json();
+			kategorien = [{ id: 0, name: 'Alle' }, ...data];
+		} catch (e) {
+			console.error ('Kategorien laden fehlgeschlagen');
+		}	
+	}
+
+	async function loadRecipes() {
+		loading = true;
+		try {
+			let url = `${API_BASE}/recipes?`;
+			if (searchText) url += `search=${searchText}&`;
+			if (selectedKategorie) url += `category_id=${selectedKategorie}`;
+			const res = await fetch(url);
+			recipes = await res.json();
+		} catch (e) {
+			console.error('Rezepte laden fehlgeschlagen');
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		loadKategorien();
+		loadRecipes();
+	});
+
+	$effect(() => {
+		selectedKategorie;
+		searchText;
+		loadRecipes();
+	});
+	
 	function scrollToContent () {
 		document.getElementById('content')?.scrollIntoView({ behavior: 'smooth' });
 	}
-
-	//Probe-Daten bis Isabells Backend fertig ist --> Das dann ändern! zwecks todos
-	let recipes = [
-		{
-			id: 1,
-			title: 'Spaghetti Bolognese',
-			description: 'Klassisches italienisches Nudelgericht',
-			category: 'Italienisch',
-			stars: 4,
-			is_public: true
-		},
-		{
-			id: 2,
-			title: 'Vegane Bowl',
-			description: 'Gesunde Bowl mit Quinoa und Avocado',
-			category: 'Vegan',
-			stars: 5,
-			is_public: true
-		},
-		{
-			id: 3,
-			title: 'Apfelkuchen',
-			description: 'Leckerer Kuchen mit frischen Äpfeln',
-			category: 'Desserts',
-			stars: 4,
-			is_public: false
-		},
-		{
-			id: 4,
-			title: 'Gebratener Reis',
-			description: 'Schnelles asiatisches Reisgericht',
-			category: 'Asiatisch',
-			stars: 3,
-			is_public: true
-		},
-		{
-			id: 5,
-			title: 'Tomatensuppe',
-			description: 'Leckere Suppe für schnelle Küche',
-			category: 'Schnelle Küche',
-			stars: 4,
-			is_public: false
-		}
-	];
-
-	const kategorien = ['Alle', 'Vegan', 'Italienisch', 'Desserts', 'Asiatisch', 'Schnelle Küche'];
-
-	let selectedKategorie = $state('Alle');
-	let searchText = $state('');
-
-	let filteredRecipes = $derived(recipes.filter (r => {
-		const matchesKategorie = selectedKategorie === 'Alle' || r.category === selectedKategorie;
-		const matchesSearch = r.title.toLowerCase().includes(searchText.toLowerCase());
-		const matchesAuth = isLoggedIn() || r.is_public;
-		return matchesKategorie && matchesSearch && matchesAuth;
-	}));
-
 	// TODO: Importiert und nutzt die Funktionen aus $lib/api
 	// import { login, logout, isLoggedIn, fetchProtected } from '$lib/api';
 
@@ -101,27 +88,31 @@
 		<div class="kategorien">
 			{#each kategorien as kat}
 				<button
-					class:aktiv={selectedKategorie === kat}
-					onclick={() => selectedKategorie = kat}
+					class:aktiv={selectedKategorie === kat.id}
+					onclick={() => selectedKategorie = kat.id}
 				>
-					{kat}
+					{kat.name}
 				</button>
 			{/each}
 		</div>
 
 		<!--Rezepte-->
-		<div class="karten">
-			{#each filteredRecipes as recipe}
-				<a href="/recipes/{recipe.id}" class="karte">
-					<h2>{recipe.title}</h2>
-					<p class="kategorie">{recipe.category}</p>
-					<p>{recipe.description}</p>
-					<StarRating rating={recipe.stars} />
-				</a>
+		{#if loading}
+			<p class="laden">Rezepte werden geladen...</p>
+		{:else}
+			<div class="karten">
+				{#each recipes as recipe}
+					<a href="/recipes/{recipe.id}" class="karte">
+						<h2>{recipe.title}</h2>
+						<p class="kategorie-badge">Kategorie {recipe.category_id}</p>
+						<p>{recipe.description}</p>
+						<StarRating rating={0} />
+					</a>
 			{:else}
 				<p>Keine Rezepte gefunden.</p>
 			{/each}
 		</div>
+	{/if}
 		<!-- TODO: Baut hier eure Oberfläche auf -->
 		<!-- Tipp: Nutzt {#if loggedIn} ... {:else} ... {/if} für konditionelle Anzeige -->
 		
@@ -187,7 +178,7 @@
 		font-size: 1.1rem;
 		color: #04545b;
 	}
-	.kategorie {
+	.kategorie-badge {
 		font-size: 0.8rem;
 		color: white;
 		background: #04545b;
@@ -198,6 +189,11 @@
 	}
 	.sterne {
 		margin-top: 0.5rem;
+	}
+	.laden {
+		text-align: center;
+		color: #888;
+		margin-top: 2rem;
 	}
 	.splash {
 		height: 100vh;

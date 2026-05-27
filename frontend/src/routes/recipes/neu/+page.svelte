@@ -1,19 +1,28 @@
 <script lang="ts">
     import { isLoggedIn } from "$lib/api";
 
-    const kategorien = ['Vegan', 'Italienisch', 'Desserts', 'Asiatisch', 'Schnelle Küche'];
+    const kategorien = [
+        { id: 1, name: 'Vegan' },
+        { id: 2, name: 'Italienisch' },
+        { id: 3, name: 'Desserts' }, 
+        { id: 4, name: 'Asiatisch' }, 
+        { id: 5, name: 'Schnelle Küche' }
+    ];
 
     let title = $state('');
     let description = $state('');
-    let category = $state('Vegan');
+    let category_id = $state(1);
     let steps = $state('');
     let is_public = $state(true);
-    let ingredients = $state([
-        { name: '', amount: '', unit: '' }
-    ]);
-
+    let ingredients = $state([{ name: '', amount: '', unit: '' }]);
     let fehler = $state('');
     let erfolg = $state('');
+    let loading = $state(false);
+    let loggedIn = $state(false);
+
+    $effect(() => {
+        loggedIn = isLoggedIn();
+    });
 
     function addIngredient() {
         ingredients = [...ingredients, { name: '', amount: '', unit: ''}];
@@ -24,25 +33,52 @@
     }
 
     async function handleSubmit() {
-        console.log('Button geklickt!');
-        console.log('Title:', title);
-        console.log ('Description:', description);
-        console.log('Steps:', steps);
-
         if (!title || !description || !steps) {
             fehler = 'Bitte alle Felder ausfüllen!';
-            console.log('Felder fehlen');
             return;
         }
-        // TODO: Später durch echten API-Call ersetzen
-        // await createRecipe({ title, description, category, steps, is_public, ingredients });
 
-        erfolg = 'Rezept erfolgreich erstellt!';
+        loading = true;
         fehler = '';
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:8000/recipes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    steps,
+                    category_id,
+                    is_public,
+                    ingredients
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Fehler beim erstellen');
+            }
+
+            erfolg = 'Rezept erfolgreich erstellt!';
+            fehler = '';
+            title = '',
+            description = '',
+            steps = '',
+            ingredients = [{ name: '', amount: '', unit: '' }];
+        } catch (e:any) {
+            fehler = e.message || 'Rezept konnte nicht erstellt werden.';
+        } finally {
+            loading = false;
+        }
     }
 </script>
 
-{#if !isLoggedIn()}
+{#if !loggedIn}
     <main>
         <p>Bitte loggen Sie sich ein, um ein Rezept zu erstellen.</p>
         <a href="/login">Zum Login</a>
@@ -66,9 +102,9 @@
         <textarea placeholder="Kurze Beschreibung des Rezepts" bind:value={description}></textarea>
 
         <label>Kategorie</label>
-        <select bind:value={category}>
+        <select bind:value={category_id}>
             {#each kategorien as kat}
-                <option value={kat}>{kat}</option>
+                <option value={kat.id}>{kat.name}</option>
             {/each}
         </select>
 
@@ -91,7 +127,9 @@
         {/each}
         <button class="add-btn" onclick={addIngredient}>+ Zutat hinzufügen</button>
 
-        <button class="submit-btn" onclick={() => handleSubmit()}>Rezept erstellen</button>
+        <button class="submit-btn" onclick={() => handleSubmit()} disabled={loading}>
+            {loading ? 'Wird erstellt...' : 'Rezept erstellen'}
+        </button>
     </main>
 {/if}
 
