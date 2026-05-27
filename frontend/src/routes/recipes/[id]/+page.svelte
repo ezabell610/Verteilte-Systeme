@@ -9,7 +9,7 @@
     let recipe = $state(null);
     let loading = $state(true);
     let fehler = $state('');
-    let loggedIn = $state(false);
+    let loggedIn = $state(isLoggedIn());
 
     $effect(() => {
         async function loadRecipe() {

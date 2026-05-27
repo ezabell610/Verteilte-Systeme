@@ -96,8 +96,8 @@
                                 checked={item.checked}
                                 onchange={() => toggleItem(item.id)}
                             />
-                            <span class="menge">{item.amount} {item.unit}</span>
-                            <span class="name">{item.name}</span>
+                            <span class="menge">{item.ingredient.amount} {item.ingredient.unit}</span>
+                            <span class="name">{item.ingredient.name}</span>
                         </label>
                         <button class="delete-btn" onclick={() => removeItem(item.id)}>x</button>
                     </li>
