@@ -2,31 +2,47 @@
     import { isLoggedIn } from "$lib/api";
     import StarRating from "$lib/StarRating.svelte";
     
+    const API_BASE = 'http://localhost:8000';
 
-    //Fake-Daten bis Backend fertig ist
-    let recipes = $state([
-        { 
-            id: 1,
-            title: 'Spaghetti Bolognese',
-            description: 'Klassisches italienisches Nudelgericht',
-            category: 'Italienisch',
-            stars: 4,
-            is_public: true
-        },
-        {
-            id: 3,
-            title: 'Geheimes Rezept',
-            description: 'Loggen Sie sich ein, um dieses Rezept zu sehen.',
-            category: 'Desserts',
-            stars: 4,
-            is_public: false
+    let recipes = $state([]);
+    let loading = $state(true);
+    let loggedIn = $state(false);
+
+    $effect(() => {
+        loggedIn = isLoggedIn()
+    });
+
+    $effect(() => {
+        if (!loggedIn) return;
+        async function loadMyRecipes() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE}/my-recipes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+                recipes = await res.json();
+            } catch (e) {
+                console.error('Fehler beim Laden');
+            } finally {
+                loading = false;
+            }
         }
-    ]);
+        loadMyRecipes();
+    });
 
-    function deleteRecipe (id: number) {
-        if (confirm('Rezept wirklich löschen?')) {
-            recipes = recipes.filter(r => r.id !== id);
-            //TODO: Später echter API Call
+    async function deleteRecipe (id: number) {
+        if (!confirm('Rezept wirklich löschen?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/recipes/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization' : `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error();
+            recipes = recipes.filter((r: any) => r.id !== id);
+        } catch (e) {
+            alert ('Fehler beim Löschen.');
         }
     }
 </script>
