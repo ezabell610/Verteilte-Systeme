@@ -78,7 +78,7 @@ class RecipeResponse(BaseModel): #
     
         
 class RatingCreate(BaseModel):
-    rating: int = Field(ge=1,le=5)
+    stars: int = Field(ge=1,le=5)
     
     
 class CategoryResponse(BaseModel):

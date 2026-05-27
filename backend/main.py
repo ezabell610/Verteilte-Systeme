@@ -242,3 +242,7 @@ def remove_from_shopping_list(id: int, current_username: Annotated[str, Depends(
     db.delete(item)
     db.commit()
     return {"message": "Entfernt"}
+
+@app.get("/categories", response_model=list[CategoryResponse])
+def get_categories(db: Session = Depends(get_db)):
+    return db.query(Category).all()

@@ -9,7 +9,7 @@
     let recipe = $state(null);
     let loading = $state(true);
     let fehler = $state('');
-    let loggedIn = $state(false);
+    let loggedIn = $state(isLoggedIn());
 
     $effect(() => {
         async function loadRecipe() {
@@ -76,7 +76,15 @@
         <span class="kategorie">{recipe.category_id}</span>
         <StarRating 
             rating={0}
-            onRate={loggedIn ? (stars) => alert('Bewertung: ' + stars + ' Sterne') : null} 
+            onRate={loggedIn ? async (stars) => {
+                const token = localStorage.getItem('token');
+                await fetch(`${API_BASE}/recipes/${id}/ratings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ stars })
+                });
+                alert('Bewertung gespeichert!');
+            } : null}
         /> 
         <p class="beschreibung">{recipe.description}</p>
 

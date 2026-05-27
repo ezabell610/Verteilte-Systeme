@@ -1,29 +1,74 @@
 <script lang="ts">
     import { isLoggedIn } from "$lib/api";
 
-    //Fake-Daten bis Backend fertig ist
-    let items = $state([
-        { id: 1, name: 'Spaghetti', amount: '400', unit: 'g', checked: false },
-        { id: 2, name: 'Hackfleisch', amount: '500', unit: 'g', checked: false },
-        { id: 3, name: 'Tomaten', amount: '400', unit: 'g', checked: true },
-    ]);
+    const API_BASE = 'http://localhost:8000';
 
-    function toggleItem(id: number) {
-        items = items.map(item =>
-            item.id === id ? { ...item, checked: !item.checked } : item
-        );
+    let items = $state([]);
+    let loading = $state(true);
+    let loggedIn = $state(false);
+
+    $effect(() => {
+        loggedIn = isLoggedIn();
+    });
+
+    $effect(() => {
+        if (!loggedIn) return;
+        loadShoppingList();
+    });
+
+    async function loadShoppingList() {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/shopping-list`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error();
+            items = await res.json();
+        } catch (e) {
+            console.error('Fehler beim Laden');
+        } finally {
+            loading = false;
+        }
     }
 
-    function removeItem(id: number) {
-        items = items.filter(item => item.id !== id);
+    async function toggleItem(id: number) {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`${API_BASE}/shopping-list/${id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            items = items.map((item: any) =>
+                item.id === id ? { ...item, checked: !item.checked } : item
+            );
+        } catch (e) {
+            console.error('Fehler beim Aktualisieren');
+        }
     }
 
-    function removeChecked() {
-        items = items.filter(item => !item.checked);
+    async function removeItem(id: number) {
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`${API_BASE}/shopping-list/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            items = items.filter((item: any) => item.id !== id);
+        } catch (e) {
+            console.error('Fehler beim Löschen.');
+        }
+    }
+       
+
+    async function removeChecked() {
+        const checkedItems = items.filter((item: any) => item.checked);
+        for (const item of checkedItems) {
+            await removeItem(item.id);
+        }
     }
 </script>
 
-{#if !isLoggedIn()}
+{#if !loggedIn}
     <main>
         <p>Bitte einloggen um die Einkaufsliste zu sehen.</p>
         <a href="/login">Zum Login</a>
@@ -42,7 +87,7 @@
         {#if items.length === 0}
             <p class="leer">Deine Einkaufsliste ist leer. Füge Zutaten von Rezepten hinzu!</p>
         {:else}
-            <ul class="liste"
+            <ul class="liste">
                 {#each items as item}
                     <li class:checked={item.checked}>
                         <label>
@@ -51,8 +96,8 @@
                                 checked={item.checked}
                                 onchange={() => toggleItem(item.id)}
                             />
-                            <span class="menge">{item.amount} {item.unit}</span>
-                            <span class="name">{item.name}</span>
+                            <span class="menge">{item.ingredient.amount} {item.ingredient.unit}</span>
+                            <span class="name">{item.ingredient.name}</span>
                         </label>
                         <button class="delete-btn" onclick={() => removeItem(item.id)}>x</button>
                     </li>
