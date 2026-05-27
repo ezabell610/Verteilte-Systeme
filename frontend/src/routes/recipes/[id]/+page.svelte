@@ -3,91 +3,61 @@
     import { isLoggedIn } from "$lib/api";
     import { page } from '$app/stores';
 
-    //Die daten hier muss man noch anpassen wenn isabell fertig ist
-    const recipes = [
-        {
-            id: 1,
-            title: 'Spaghetti Bolognese',
-            description: 'Klassisches italienisches Nudelgericht',
-            category: 'Italienisch',
-            stars: 4,
-            is_public: true,
-            ingredients: [
-                { name: 'Spaghetti', amount: '400', unit: 'g' },
-                { name: '(Veganes) Hackfleisch', amount: '500', unit: 'g' },
-                { name: 'Tomaten', amount: '400', unit: 'g' },
-                { name: 'Zwiebel', amount: '1', unit: 'Stück' }
-            ],
-            steps: 'Zwiebeln anbraten. Hack dazugeben. Tomaten hinzufügen. 20 min köcheln lassen. Mit Spaghetti servieren.'
-        },
-        {
-            id: 2,
-            title: 'Vegane Bowl',
-            description: 'Gesunde Bowl mit Quinoa und Avocado',
-            category: 'Vegan',
-            stars: 5,
-            is_public: true,
-            ingredients: [
-                { name: 'Quinoa', amount: '200', unit: 'g' },
-                { name: 'Kichererbsen', amount: '150', unit: 'g' },
-                { name: 'Spinat', amount: '100', unit: 'g' },
-                { name: 'Avocado', amount: '1', unit: 'Stück' }
-            ],
-            steps: 'Quinoa kochen. Kichererbsen rösten. Avocado schneiden. Alles in einer Bowl anrichten.'
-        },
-        {
-            id: 3,
-            title: 'Geheimes Rezept',
-            description: 'Loggen Sie sich ein, um dieses Rezept zu sehen.',
-            category: 'Desserts',
-            stars: 4,
-            is_public: false,
-            ingredients: [
-                { name: 'Zucker', amount: '200', unit: 'g' },
-                { name: 'Mehl', amount: '300', unit: 'g' }
-            ],
-            steps: 'Loggen Sie sich ein, um die Schritte zu sehen.'
-        },
-        {
-            id: 4,
-			title: 'Gebratener Reis',
-			description: 'Schnelles asiatisches Reisgericht',
-			category: 'Asiatisch',
-			stars: 3,
-			is_public: true,
-            ingredients: [
-                { name: 'Reis', amount: '300', unit: 'g' },
-                { name: 'Sojasauce', amount: '3', unit: 'EL' },
-                { name: 'Ei', amount: '2', unit: 'Stück' }
-            ],
-            steps: 'Reis kochen. Ei anbraten. Reis dazugeben. Sojasauce hinzufügen.'
-        },
-        {
-            id: 5,
-			title: 'Tomatensuppe',
-			description: 'Loggen Sie sich ein, um dieses Rezept zu sehen.',
-			category: 'Schnelle Küche',
-			stars: 4,
-			is_public: false,
-            ingredients: [
-                { name: 'Tomaten', amount: '500', unit: 'g' },
-                { name: 'Sahne', amount: '100', unit: 'ml' },
-                { name: 'Zwiebel', amount: '1', unit: 'Stück' }
-            ],
-            steps: 'Loggen Sie sich ein, um die Schritte zu sehen.'
-        }
-    ];
-
+    const API_BASE = 'http://localhost:8000';
     const id = Number($page.params.id);
-    const recipe = recipes.find(r => r.id === id);
+
+    let recipe = $state(null);
+    let loading = $state(true);
+    let fehler = $state('');
+    let loggedIn = $state(false);
+
+    $effect(() => {
+        async function loadRecipe() {
+            try {
+                const res = await fetch(`${API_BASE}/recipes/${id}`);
+                if (!res.ok) throw new Error('Nicht gefunden');
+                recipe = await res.json();
+            } catch (e) {
+                fehler = 'Rezept konnte nicht geladen werden.';
+            } finally {
+                loading = false;
+            }
+        }
+        loadRecipe();
+    });
+
+    async function addToShoppingList(ingredientID: number, name: string) {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/shopping-list`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ ingredient_id: ingredientID })
+            });
+            if (!res.ok) throw new Error();
+            alert(name + ' zur Einkaufsliste hinzugefügt!');
+        } catch (e) {
+            alert('Fehler beim Hinzufügen zur Einkaufsliste.');
+        }
+    }
 </script>
 
-{#if !recipe}
+{#if loading}
+    <main><p>Wird geladen...</p></main>
+{:else if fehler}
+    <main>
+        <p>{fehler}</p>
+        <a href="/">Zurück zur Startseite</a>
+    </main>
+{:else if !recipe}
     <main>
         <p>Rezept nicht gefunden.</p>
         <a href="/">Zurück zur Startseite</a>
     </main>
-{:else if !recipe.is_public && !isLoggedIn()}
+{:else if !recipe.is_public && !loggedIn}
     <main>
         <p>Dieses Rezept ist privat. Bitte loggen Sie sich ein.</p>
         <a href="/login">Zum Login</a>
@@ -98,15 +68,15 @@
 
         <div class="header">
             <h1>{recipe.title}</h1>
-            {#if isLoggedIn()}
+            {#if loggedIn}
                 <a href="/recipes/{recipe.id}/edit" class="edit-btn">Bearbeiten</a>
             {/if}
         </div>
 
-        <span class="kategorie">{recipe.category}</span>
+        <span class="kategorie">{recipe.category_id}</span>
         <StarRating 
-            rating={recipe.stars}
-            onRate={isLoggedIn() ? (stars) => { alert('Du hast ' + stars + ' Sterne vergeben!') } : null} 
+            rating={0}
+            onRate={loggedIn ? (stars) => alert('Bewertung: ' + stars + ' Sterne') : null} 
         /> 
         <p class="beschreibung">{recipe.description}</p>
 
@@ -115,8 +85,8 @@
             {#each recipe.ingredients as zutat}
                 <li>
                     {zutat.amount} {zutat.unit} {zutat.name}
-                    {#if isLoggedIn()}
-                        <button class="add-btn" onclick={() => alert('Zur Einkaufsliste hinzugefügt: ' + zutat.name)}>
+                    {#if loggedIn}
+                        <button class="add-btn" onclick={() => addToShoppingList(zutat.id, zutat.name)}>
                             + Einkaufsliste
                         </button>
                     {/if}    
