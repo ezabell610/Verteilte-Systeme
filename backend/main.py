@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from auth import (DUMMY_HASH,create_access_token,get_current_user,get_password_hash,verify_password,)
 from database import Base, engine, get_db
-from models import User, Recipe, Ingredient, Rating, ShoppingListItem
+from models import User, Recipe, Ingredient, Rating, ShoppingListItem, Category
 from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate, RatingCreate, CategoryResponse, ShoppingListItemCreate, ShoppingListItemResponse
 
 # Tabellen anlegen (falls noch nicht vorhanden)
@@ -18,6 +18,17 @@ app = FastAPI(title="Mein Projekt", version="0.1.0")
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
+@app.on_event("startup")
+def seed_categories():
+    db = next(get_db())
+    try:
+        if db.query(Category).count() == 0:
+            for name in ["Vegan", "Italienisch", "Desserts", "Asiatisch", "Schnelle Küche"]:
+                db.add(Category(name=name))
+            db.commit()
+    finally:
+        db.close()
+
 
 app.add_middleware (
     CORSMiddleware,
@@ -124,13 +135,20 @@ def get_recipe(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/recipes",response_model=RecipeResponse,status_code=201) #Rezept erstellen
-def create_recipe(data: RecipeCreate, current_user: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == current_user).first()
-    recipe = Recipe(title = data.title, description = data.description, steps = data.steps, category_id = data.category_id, is_public = data.is_puplic, user_id = data.user_id)
+def create_recipe(data: RecipeCreate, current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    recipe = Recipe(
+        title = data.title, 
+        description = data.description, 
+        steps = data.steps, 
+        category_id = data.category_id, 
+        is_public = data.is_public, 
+        user_id = user.id
+    )
     db.add(recipe)
     db.flush()
     for ing in data.ingredients:
-        db.add(Ingredient(recipe_id = recipe.id, name = ing.name, amount = ing.amount, unit = int.unit))
+        db.add(Ingredient(recipe_id = recipe.id, name = ing.name, amount = ing.amount, unit = ing.unit))
     db.commit()
     db.refresh(recipe)
     return recipe

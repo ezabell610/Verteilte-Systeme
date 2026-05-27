@@ -78,7 +78,7 @@
     }
 </script>
 
-{#if !loggedIn()}
+{#if !loggedIn}
     <main>
         <p>Bitte loggen Sie sich ein, um ein Rezept zu erstellen.</p>
         <a href="/login">Zum Login</a>
