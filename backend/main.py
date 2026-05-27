@@ -19,6 +19,14 @@ app = FastAPI(title="Mein Projekt", version="0.1.0")
 # Health Check
 # ---------------------------------------------------------------------------
 
+app.add_middleware (
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -39,7 +47,7 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
     # 2. Passwort hashen mit get_password_hash()
     hashed_password = get_password_hash(data.password)
     # 3. User-Objekt anlegen, in DB speichern, zurückgeben
-    user = User(username=data.username,email=data.email,password_hash=hashed_password)
+    user = User(username=data.username,email=data.email,hashed_password=hashed_password)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -56,7 +64,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: Session
     # 1. Benutzer anhand von form_data.username in der DB suchen
     user = db.query(User).filter(User.username == form_data.username).first()
     # 2. Passwort mit verify_password() prüfen (Timing-Schutz: DUMMY_HASH nutzen)
-    hashed = user.password_hash if user else DUMMY_HASH
+    hashed = user.hashed_password if user else DUMMY_HASH
     valid = verify_password(form_data.password,hashed)
     # 3. Bei Fehler: 401 zurückgeben (generische Meldung!)
     if not user or not valid:
