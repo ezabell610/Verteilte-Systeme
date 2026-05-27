@@ -40,14 +40,28 @@
             fehler = 'Bitte alle Felder ausfüllen';
             return;
         }
-
         loading = true;
         fehler = '';
 
         try {
-            //TODO: Echter API Call wenn Backend fertig ist
-            //await updateRecipe(id, {title, description, steps, category_id, is_public, ingredients });
-            erfolg = 'Rezept erfolgreich aktualisiert.'
+            const token = localStorage.getItem('token');
+            const res = await fetch(`http://localhost:8000/recipes/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title,
+                    description,
+                    steps,
+                    category_id,
+                    is_public,
+                    ingredients
+                })
+            });
+            if (!res.ok) throw new Error();
+            erfolg = 'Rezept erfolgreich aktualisiert.';
         } catch (e) {
             fehler = 'Fehler beim Speichern.';
         } finally {
