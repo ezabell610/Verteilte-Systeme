@@ -156,7 +156,7 @@ def create_recipe(data: RecipeCreate, current_username: Annotated[str, Depends(g
 @app.get("/my-recipes", response_model=list[RecipeResponse])
 def get_my_recipes(current_username: Annotated[str, Depends(get_current_user)],db:Session = Depends(get_db)):
     user = db.query(User).filter(User.username == current_username).first()
-    return db.query(Recipe).filter(Recipe.user_id == user.id).first
+    return db.query(Recipe).filter(Recipe.user_id == user.id).all()
 
 
 @app.put("/recipes/{id}",response_model=RecipeResponse) #Rezept verändern
