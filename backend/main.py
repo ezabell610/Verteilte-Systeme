@@ -12,6 +12,14 @@ from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeRespo
 
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
+# Beispieldaten einfügen (nur falls DB leer ist)
+from seed import seed_database
+from database import SessionLocal
+_db = SessionLocal()
+try:
+    seed_database(_db)
+finally:
+    _db.close()
 
 app = FastAPI(title="Mein Projekt", version="0.1.0")
 
