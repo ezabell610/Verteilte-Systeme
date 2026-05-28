@@ -49,6 +49,11 @@
 	function scrollToContent () {
 		document.getElementById('content')?.scrollIntoView({ behavior: 'smooth' });
 	}
+
+	function getCategoryName(id: number): string {
+		const kat = kategorien.find((k: any) => k.id === id);
+		return kat ? kat.name: 'Unbekannt';
+	}
 	// TODO: Importiert und nutzt die Funktionen aus $lib/api
 	// import { login, logout, isLoggedIn, fetchProtected } from '$lib/api';
 
@@ -104,7 +109,7 @@
 				{#each recipes as recipe}
 					<a href="/recipes/{recipe.id}" class="karte">
 						<h2>{recipe.title}</h2>
-						<p class="kategorie-badge">Kategorie {recipe.category_id}</p>
+						<p class="kategorie-badge">{getCategoryName(recipe.category_id)}</p>
 						<p>{recipe.description}</p>
 						<StarRating rating={0} />
 					</a>

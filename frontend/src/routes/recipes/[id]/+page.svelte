@@ -26,6 +26,21 @@
         loadRecipe();
     });
 
+    let kategorien = $state([]);
+
+    $effect(() => {
+        async function loadKategorien() {
+            const res = await fetch(`${API_BASE}/categories`);
+            kategorien = await res.json();
+        }
+        loadKategorien();
+    });
+
+    function getCategoryName(id: number): string {
+        const kat = kategorien.find((k: any) => k.id === id);
+        return kat ? kat.name : '';
+    }
+
     async function addToShoppingList(ingredientID: number, name: string) {
         try {
             const token = localStorage.getItem('token');
@@ -73,7 +88,7 @@
             {/if}
         </div>
 
-        <span class="kategorie">{recipe.category_id}</span>
+        <span class="kategorie">{getCategoryName(recipe.category_id)}</span>
         <StarRating 
             rating={0}
             onRate={loggedIn ? async (stars) => {
