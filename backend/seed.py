@@ -22,11 +22,11 @@ def seed_database(db: Session) -> None:
 
     # --- Kategorien ---
     categories_data = [
-        {"name": "Frühstück", "description": "Rezepte für den Start in den Tag"},
-        {"name": "Mittagessen", "description": "Herzhafte Hauptgerichte für mittags"},
-        {"name": "Abendessen", "description": "Leichte oder deftige Abendgerichte"},
-        {"name": "Snack", "description": "Kleine Leckereien für zwischendurch"},
+        {"name": "Vegan", "description": "Pflanzliche Rezepte, ohne tierische Produkte"},
+        {"name": "Italienisch", "description": "Klassische italienische Gerichte"},
         {"name": "Dessert", "description": "Süßes für nach dem Essen"},
+        {"name": "Asiatisch", "description": "Gerichte aus der asiatischen Küche"},
+        {"name": "Schnelle Küche", "description": "Fertig in unter 30 min"},
     ]
     categories = {}
     for cat_data in categories_data:
@@ -59,7 +59,7 @@ def seed_database(db: Session) -> None:
             "title": "Pancakes mit Ahornsirup",
             "description": "Klassische amerikanische Pancakes – fluffig und lecker.",
             "steps": "1. Mehl, Milch, Ei und Zucker zu einem Teig verrühren.\n2. Butter in einer Pfanne erhitzen.\n3. Pro Pancake einen Schöpfer Teig in die Pfanne geben.\n4. Beidseitig goldbraun backen.\n5. Mit Ahornsirup servieren.",
-            "category": "Frühstück",
+            "category": "Schnelle Küche",
             "user": "selina",
             "is_public": True,
             "ingredients": [
@@ -75,7 +75,7 @@ def seed_database(db: Session) -> None:
             "title": "Spaghetti Carbonara",
             "description": "Original italienische Carbonara mit Speck und Ei.",
             "steps": "1. Spaghetti in Salzwasser al dente kochen.\n2. Speck in einer Pfanne knusprig braten.\n3. Eier mit Parmesan und Pfeffer verquirlen.\n4. Spaghetti abgießen, sofort mit Ei-Mischung und Speck vermengen.\n5. Mit extra Parmesan servieren.",
-            "category": "Mittagessen",
+            "category": "Italienisch",
             "user": "anna",
             "is_public": True,
             "ingredients": [
@@ -90,7 +90,7 @@ def seed_database(db: Session) -> None:
             "title": "Caesar Salad",
             "description": "Frischer Salat mit knusprigen Croutons.",
             "steps": "1. Römersalat waschen und in mundgerechte Stücke schneiden.\n2. Brot würfeln und in Öl mit Knoblauch goldbraun rösten.\n3. Dressing aus Mayonnaise, Senf, Zitrone und Parmesan anrühren.\n4. Salat mit Dressing vermengen, Croutons und Parmesan darüberstreuen.",
-            "category": "Mittagessen",
+            "category": "Schnelle Küche",
             "user": "selina",
             "is_public": True,
             "ingredients": [
@@ -106,7 +106,7 @@ def seed_database(db: Session) -> None:
             "title": "Gemüse-Curry",
             "description": "Schnelles veganes Curry mit Kokosmilch.",
             "steps": "1. Zwiebel und Knoblauch fein hacken und in Öl anbraten.\n2. Currypaste hinzufügen und kurz mitbraten.\n3. Gemüse zugeben, kurz anschwitzen.\n4. Mit Kokosmilch ablöschen und 15 Minuten köcheln lassen.\n5. Mit Reis servieren.",
-            "category": "Abendessen",
+            "category": "Vegan",
             "user": "anna",
             "is_public": True,
             "ingredients": [
@@ -122,7 +122,7 @@ def seed_database(db: Session) -> None:
             "title": "Bananen-Schoko-Smoothie",
             "description": "Schneller Snack für unterwegs.",
             "steps": "1. Banane schälen und in Stücke schneiden.\n2. Mit Milch, Kakao und Honig in den Mixer geben.\n3. Glatt pürieren.\n4. In ein hohes Glas füllen und sofort genießen.",
-            "category": "Snack",
+            "category": "Dessert",
             "user": "selina",
             "is_public": True,
             "ingredients": [
