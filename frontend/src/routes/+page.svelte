@@ -49,6 +49,11 @@
 	function scrollToContent () {
 		document.getElementById('content')?.scrollIntoView({ behavior: 'smooth' });
 	}
+
+	function getCategoryName(id: number): string {
+		const kat = kategorien.find((k: any) => k.id === id);
+		return kat ? kat.name: 'Unbekannt';
+	}
 	// TODO: Importiert und nutzt die Funktionen aus $lib/api
 	// import { login, logout, isLoggedIn, fetchProtected } from '$lib/api';
 
@@ -104,7 +109,7 @@
 				{#each recipes as recipe}
 					<a href="/recipes/{recipe.id}" class="karte">
 						<h2>{recipe.title}</h2>
-						<p class="kategorie-badge">Kategorie {recipe.category_id}</p>
+						<p class="kategorie-badge">{getCategoryName(recipe.category_id)}</p>
 						<p>{recipe.description}</p>
 						<StarRating rating={0} />
 					</a>
@@ -134,6 +139,46 @@
 		border-radius: 6px;
 		margin-bottom: 1rem;
 		box-sizing: border-box;
+	}
+	.header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1.5rem;
+	}
+	.erstellen-btn {
+		background: #04545b;
+		color: white;
+		padding: 0.5rem 1.2rem;
+		border-radius: 20px;
+		text-decoration: none;
+		font-size: 0.95rem;
+		font-weight: 500;
+		letter-spacing: 0.3px;
+		box-shadow: 0 2px 8px rgba(4, 84, 91, 0.3);
+		transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+	}
+	.erstellen-btn:hover {
+		background-color: #033d43;
+		transform: scale(1.03);
+		box-shadow: 0 4px 14px rgba(4, 84, 91, 0.4);
+	}
+	input {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		font-size: 1rem;
+		border: 1px #e0e0e0;
+		border-radius: 12px;
+		margin-bottom: 1rem;
+		box-sizing: border-box;
+		background: #f9f9f9;
+		outline: none;
+		transition: border 0.2s, box-shadow 0.2s;
+	}
+	input:focus {
+		border-color: #04545b;
+		background: white;
+		box-shadow: 0 0 0 3px rgba(4, 84, 91, 0.1);
 	}
 	.kategorien {
 		display: flex;
