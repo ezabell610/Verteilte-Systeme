@@ -111,7 +111,7 @@
 						<h2>{recipe.title}</h2>
 						<p class="kategorie-badge">{getCategoryName(recipe.category_id)}</p>
 						<p>{recipe.description}</p>
-						<StarRating rating={0} />
+						<StarRating rating={recipe.average_rating} />
 					</a>
 			{:else}
 				<p>Keine Rezepte gefunden.</p>
