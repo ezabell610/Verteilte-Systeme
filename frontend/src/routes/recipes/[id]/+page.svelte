@@ -77,6 +77,23 @@
         }
         loadMyRating();
     });
+
+    let currentUserID = $state(0);
+
+    $effect(() => {
+        if (!loggedIn) return;
+        async function loadProfile() {
+            const token = localStorage.getItem('token');
+            const res = await fetch (`http://localhost:8000/my-profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                currentUserID = data.id;
+            }
+        }
+        loadProfile();
+    });
 </script>
 
 {#if loading}
@@ -102,7 +119,7 @@
 
         <div class="header">
             <h1>{recipe.title}</h1>
-            {#if loggedIn}
+            {#if loggedIn && recipe.user_id === currentUserID}
                 <a href="/recipes/{recipe.id}/edit" class="edit-btn">Bearbeiten</a>
             {/if}
         </div>
