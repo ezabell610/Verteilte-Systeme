@@ -27,7 +27,23 @@
 			if (searchText) url += `search=${searchText}&`;
 			if (selectedKategorie) url += `category_id=${selectedKategorie}`;
 			const res = await fetch(url);
-			recipes = await res.json();
+			let data = await res.json();
+
+			// Eigene Private Rezepte hinzufügen wenn eingeloggt
+			if (isLoggedIn()) {
+				const token = localStorage.getItem('token');
+				const myRes = await fetch(`${API_BASE}/my-recipes`, {
+					headers: { 'Authorization': `Bearer ${token}` }
+				});
+				const myRecipes = await myRes.json();
+				const privateOwn = myRecipes.filter((r: any) => !r.is_public);
+
+				const existingIds = new Set(data.map((r: any) => r.id));
+				for (const r of privateOwn) {
+					if (!existingIds.has(r.id)) data.push(r);
+				}
+			}
+			recipes = data;
 		} catch (e) {
 			console.error('Rezepte laden fehlgeschlagen');
 		} finally {
