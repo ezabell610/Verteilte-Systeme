@@ -71,7 +71,7 @@
                         </div>
                         <span class="kategorie">{recipe.category}</span>
                         <p>{recipe.description}</p>
-                        <StarRating rating={recipe.stars} />
+                        <StarRating rating={recipe.average_rating} />
                         <div class="aktionen">
                             <a href="/recipes/{recipe.id}">Ansehen</a>
                             <a href="/recipes/{recipe.id}/edit">Bearbeiten</a>

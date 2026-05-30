@@ -98,3 +98,16 @@ class ShoppingListItemResponse(BaseModel):
     checked: bool
     ingredient: IngedientResponse
     model_config = {"from_attributes" : True}
+    
+class RecipeResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    steps: str
+    is_public: bool
+    category_id: int
+    user_id: int
+    ingredients: List[IngedientResponse]
+    average_rating: float = 0.0
+    model_config = {"from_attributes": True}
+    

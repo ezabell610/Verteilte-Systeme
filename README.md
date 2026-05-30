@@ -9,7 +9,7 @@ Projekt im Rahmen der Vorlesung **Verteilte Systeme** (4. Semester, DHBW).
 - Registrierung und Login mit JWT-Authentifizierung
 - Rezepte erstellen, bearbeiten und löschen
 - Zutaten und Zubereitungsschritte pro Rezept
-- Kategorien (z.B. Frühstück, Mittagessen, Dessert)
+- Kategorien (z.B. Asiatisch, Italienisch, Dessert)
 - Persönliche Einkaufsliste aus Zutaten
 - Filter nach Kategorien
 - Sternebewertung (1–5)
@@ -72,7 +72,7 @@ docker compose up --build
 | Methode | Pfad | Zweck | Auth |
 |---------|------|-------|------|
 | POST | `/auth/register` | Account anlegen | – |
-| POST | `/auth/login` | Login, gibt JWT zurück | – |
+| POST | `/token` | Login, gibt JWT zurück | – |
 | GET | `/recipes` | Alle (öffentlichen) Rezepte | – |
 | GET | `/recipes/{id}` | Einzelnes Rezept | – |
 | POST | `/recipes` | Rezept erstellen | JWT |

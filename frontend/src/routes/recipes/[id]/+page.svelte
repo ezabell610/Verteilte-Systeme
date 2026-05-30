@@ -60,6 +60,23 @@
             alert('Fehler beim Hinzufügen zur Einkaufsliste.');
         }
     }
+
+    $effect(() => {
+        if (!loggedIn) return;
+        async function loadMyRating() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`http://localhost:8000/recipes/${id}/my-rating`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    userRating = data.stars;
+                }
+            } catch (e) {}
+        }
+        loadMyRating();
+    });
 </script>
 
 {#if loading}
@@ -92,7 +109,7 @@
 
         <span class="kategorie">{getCategoryName(recipe.category_id)}</span>
         <StarRating 
-            rating={userRating}
+            rating={userRating || recipe.average_rating}
             onRate={loggedIn ? async (stars) => {
                 const token = localStorage.getItem('token');
                 const res = await fetch(`${API_BASE}/recipes/${id}/ratings`, {

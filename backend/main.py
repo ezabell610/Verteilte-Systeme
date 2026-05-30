@@ -127,7 +127,10 @@ def get_recipes(search: str = "", category_id: int = 0, db: Session = Depends(ge
         query = query.filter(Recipe.title.ilike(f"%{search}%"))
     if category_id:
         query = query.filter(Recipe.category_id == category_id)
-    return query.all()
+    recipes = query.all()
+    for recipe in recipes:
+        recipe.average_rating = get_average_rating(recipe.id, db)
+    return recipes
 
 
 @app.get("/recipes/{id}", response_model=RecipeResponse) #einzelne Rezepte laden
@@ -139,6 +142,7 @@ def get_recipe(id: int, db: Session = Depends(get_db)):
         return recipe
     if not recipe.is_public:
         raise HTTPException(status_code=401,detail="Anmeldung erforderlich")
+    recipe.average_rating = get_average_rating(recipe.id, db)
     return recipe
 
 
@@ -164,7 +168,10 @@ def create_recipe(data: RecipeCreate, current_username: Annotated[str, Depends(g
 @app.get("/my-recipes", response_model=list[RecipeResponse])
 def get_my_recipes(current_username: Annotated[str, Depends(get_current_user)],db:Session = Depends(get_db)):
     user = db.query(User).filter(User.username == current_username).first()
-    return db.query(Recipe).filter(Recipe.user_id == user.id).all()
+    recipes = db.query(Recipe).filter(Recipe.user_id == user.id).all()
+    for recipe in recipes:
+        recipe.average_rating = get_average_rating(recipe.id, db)
+    return recipes
 
 
 @app.put("/recipes/{id}",response_model=RecipeResponse) #Rezept verändern
@@ -254,3 +261,17 @@ def remove_from_shopping_list(id: int, current_username: Annotated[str, Depends(
 @app.get("/categories", response_model=list[CategoryResponse])
 def get_categories(db: Session = Depends(get_db)):
     return db.query(Category).all()
+
+@app.get("/recipes/{id}/my-rating")
+def get_my_rating(id: int, current_username: Annotated[str, Depends(get_current_user)], db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == current_username).first()
+    rating = db.query(Rating).filter(Rating.recipe_id == id, Rating.user_id == user.id).first()
+    if not rating:
+        return {"stars": 0}
+    return {"stars": rating.stars}
+
+def get_average_rating(recipe_id: int, db: Session) -> float:
+    ratings = db.query(Rating).filter(Rating.recipe_id == recipe_id).all()
+    if not ratings:
+        return 0.0
+    return round(sum(r.stars for r in ratings) / len(ratings), 1)
