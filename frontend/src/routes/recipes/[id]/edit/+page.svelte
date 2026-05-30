@@ -68,6 +68,29 @@
             loading = false;
         }
     }
+
+    $effect(() => {
+        async function loadRecipe() {
+            try {
+                const res = await fetch(`http://localhost:8000/recipes/${id}`);
+                if (!res.ok) throw new Error();
+                const recipe = await res.json();
+                title = recipe.title;
+                description = recipe.description;
+                steps = recipe.steps;
+                category_id = recipe.category_id;
+                is_public = recipe.is_public;
+                ingredients = recipe.ingredients.map((ing: any) => ({
+                    name: ing.name,
+                    amount: ing.amount,
+                    unit: ing.unit
+                }));
+            } catch (e) {
+                fehler = 'Rezept konnte nicht geladen werden.'
+            }
+        }
+        loadRecipe();
+    });
 </script>
 
 {#if !loggedIn}
