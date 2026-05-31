@@ -14,7 +14,11 @@
     $effect(() => {
         async function loadRecipe() {
             try {
-                const res = await fetch(`${API_BASE}/recipes/${id}`);
+                const headers: any = {};
+                if (isLoggedIn()) {
+                    headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`;
+                }
+                const res = await fetch(`${API_BASE}/recipes/${id}`, { headers });
                 if (!res.ok) throw new Error('Nicht gefunden');
                 recipe = await res.json();
             } catch (e) {
@@ -94,6 +98,8 @@
         }
         loadProfile();
     });
+
+    
 </script>
 
 {#if loading}
