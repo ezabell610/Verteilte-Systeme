@@ -10,6 +10,8 @@ from database import Base, engine, get_db
 from models import User, Recipe, Ingredient, Rating, ShoppingListItem, Category
 from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeResponse, RecipeUpdate, RatingCreate, CategoryResponse, ShoppingListItemCreate, ShoppingListItemResponse
 
+from fastapi.security import OAuth2PasswordBearer
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
 # Beispieldaten einfügen (nur falls DB leer ist)
@@ -134,13 +136,11 @@ def get_recipes(search: str = "", category_id: int = 0, db: Session = Depends(ge
 
 
 @app.get("/recipes/{id}", response_model=RecipeResponse) #einzelne Rezepte laden
-def get_recipe(id: int, db: Session = Depends(get_db)):
+def get_recipe(id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme_optional)):
     recipe = db.query(Recipe).filter(Recipe.id == id).first()
     if recipe is None:
         raise HTTPException(status_code=404,detail="Rezept nicht gefunden")
-    if recipe.is_public:
-        return recipe
-    if not recipe.is_public:
+    if not recipe.is_public and not token:
         raise HTTPException(status_code=401,detail="Anmeldung erforderlich")
     recipe.average_rating = get_average_rating(recipe.id, db)
     return recipe
