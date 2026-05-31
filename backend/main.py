@@ -12,6 +12,13 @@ from schemas import Token, UserRegister, UserResponse, RecipeCreate, RecipeRespo
 
 from fastapi.security import OAuth2PasswordBearer
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
+
+def get_average_rating(recipe_id: int, db: Session) -> float:
+    ratings = db.query(Rating).filter(Rating.recipe_id == recipe_id).all()
+    if not ratings:
+        return 0.0
+    return round(sum(r.stars for r in ratings) / len(ratings), 1)
+
 # Tabellen anlegen (falls noch nicht vorhanden)
 Base.metadata.create_all(bind=engine)
 # Beispieldaten einfügen (nur falls DB leer ist)
@@ -28,16 +35,6 @@ app = FastAPI(title="Mein Projekt", version="0.1.0")
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
-@app.on_event("startup")
-def seed_categories():
-    db = next(get_db())
-    try:
-        if db.query(Category).count() == 0:
-            for name in ["Vegan", "Italienisch", "Desserts", "Asiatisch", "Schnelle Küche"]:
-                db.add(Category(name=name))
-            db.commit()
-    finally:
-        db.close()
 
 
 app.add_middleware (
@@ -270,8 +267,3 @@ def get_my_rating(id: int, current_username: Annotated[str, Depends(get_current_
         return {"stars": 0}
     return {"stars": rating.stars}
 
-def get_average_rating(recipe_id: int, db: Session) -> float:
-    ratings = db.query(Rating).filter(Rating.recipe_id == recipe_id).all()
-    if not ratings:
-        return 0.0
-    return round(sum(r.stars for r in ratings) / len(ratings), 1)
