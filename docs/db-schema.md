@@ -62,9 +62,9 @@ erDiagram
 
 **users** – Speichert die registrierten Nutzer mit Benutzername, E-Mail und gehashtem Passwort. Das Passwort wird mit Argon2 gehasht und nie im Klartext gespeichert.
 
-**categories** – Feste Kategorien wie z.B. Frühstück, Mittagessen, Abendessen, Snack, Dessert. Werden über Seed-Daten angelegt; Nutzer können keine neuen Kategorien erstellen.
+**categories** – Feste Kategorien wie z.B. Vegan, Italienisch, Dessert, Asiatisch, Schnelle Küche. Werden über das Seed-Script angelegt; Nutzer können keine neuen Kategorien erstellen.
 
-**recipes** – Das Herzstück. Jedes Rezept gehört zu genau einem User und einer Kategorie. `is_public` steuert, ob das Rezept ohne Login sichtbar ist. Die Zubereitungsschritte (`steps`) werden als Text gespeichert.
+**recipes** – Das Herzstück. Jedes Rezept gehört zu genau einem User und einer Kategorie. `is_public` steuert, ob das Rezept ohne Login sichtbar ist (default: false – Rezepte sind standardmäßig privat). Die Zubereitungsschritte (`steps`) werden als Text gespeichert.
 
 **ingredients** – Jede Zutat ist eine eigene Zeile mit Name, Menge und Einheit (z.B. "Mehl", "200", "g"). Gehört zu genau einem Rezept. Wird beim Löschen des Rezepts automatisch mitgelöscht (`cascade="all, delete-orphan"`).
 
@@ -86,4 +86,5 @@ erDiagram
 
 - **Cascade Delete:** Wird ein Rezept gelöscht, werden alle zugehörigen Zutaten und Bewertungen automatisch mitgelöscht.
 - **Unique Constraints:** `username` und `email` müssen unique sein; `category.name` ebenfalls.
+- **Default-Werte:** Rezepte sind standardmäßig privat (`is_public = false`); Einkaufslisten-Einträge sind initial nicht abgehakt (`checked = false`).
 - **ORM:** Definition als SQLAlchemy-Models in `backend/models.py`.
